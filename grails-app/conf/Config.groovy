@@ -1,4 +1,4 @@
-import grails.orm.PagedResultList
+import grails.gorm.PagedResultList
 import org.nofdev.servicefacade.grails.PagedResultListCategory
 
 // configuration for plugin testing - will not be included in the plugin zip

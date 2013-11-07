@@ -1,6 +1,6 @@
 package org.nofdev.servicefacade.grails
 
-import grails.orm.PagedResultList
+import grails.gorm.PagedResultList
 import org.nofdev.servicefacade.PagedList
 import org.nofdev.servicefacade.Paginator
 

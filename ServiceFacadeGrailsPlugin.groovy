@@ -1,8 +1,8 @@
 class ServiceFacadeGrailsPlugin {
     // the plugin version
-    def version = "2.0"
+    def version = "2.2.3"
     // the version or versions of Grails the plugin is designed for
-    def grailsVersion = "2.2 > *"
+    def grailsVersion = "2.3 > *"
     // resources that are excluded from plugin packaging
     def pluginExcludes = [
         "grails-app/views/error.gsp"
@@ -48,7 +48,7 @@ Brief summary/description of the plugin.
         // TODO Implement registering dynamic methods to classes (optional)
     }
 
-    def doWithApplicationContext = { applicationContext ->
+    def doWithApplicationContext = { ctx ->
         // TODO Implement post initialization spring config (optional)
     }
 

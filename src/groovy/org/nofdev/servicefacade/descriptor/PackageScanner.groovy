@@ -15,6 +15,6 @@ class PackageScanner {
         for(String p : packageNames) {
 
         }
-        return packages.values()
+        return packages.values() as List<PackageMeta>
     }
 }
