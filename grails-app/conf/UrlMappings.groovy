@@ -9,6 +9,5 @@ class UrlMappings {
 
         "/"(redirect: '/facade/')
         "500"(view:'/error')
-        "/facade/$action/$packageName/$facadeName/$methodName"(controller:'facade')
 	}
 }
