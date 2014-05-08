@@ -3,7 +3,7 @@ import org.nofdev.servicefacade.grails.PagedResultListCategory
 
 class ServiceFacadeGrailsPlugin {
     // the plugin version
-    def version = "2.2.3"
+    def version = "3.2.3"
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = "2.3 > *"
     // resources that are excluded from plugin packaging
@@ -16,7 +16,8 @@ class ServiceFacadeGrailsPlugin {
     def author = "pootow"
     def authorEmail = "pootow@gmail.com"
     def description = '''\
-Brief summary/description of the plugin.
+Version 3.2.3 means that this is the 3rd version and is for grails ver2.3.x
+Version 7.3.6 means that this is the 7th version and is for grails ver3.6.x
 '''
 
     // URL to the plugin's documentation
