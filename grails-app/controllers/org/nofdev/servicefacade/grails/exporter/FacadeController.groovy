@@ -82,18 +82,6 @@ class FacadeController {
         [services: serviceInterfaces, baseUrl: request.contextPath]
     }
 
-    def xzmWsdl = {
-        List<String> packageNames = grailsApplication.config.grails.plugin.servicefacade.scanlist
-        List<Class> classes = []
-        log.debug "Generate JSON WSDL for package: $packageNames"
-        packageNames.each { classes.addAll(PackageUtil.getClasses(it)) }
-        def serviceInterfaces = classes.findAll {
-            it.isInterface() && it.simpleName.startsWith('I')
-        }
-        response.addHeader("Cache-Control", "max-age=43200")
-        [services: serviceInterfaces, baseUrl: request.contextPath]
-    }
-
     private def formatException(Throwable throwable) {
         if (throwable == null) return null
         def pretty = [:]

@@ -47,10 +47,12 @@ grails.project.dependency.resolution = {
             export = false
         }
 
-        runtime(":resources:1.2.1",
-                ":jquery:1.10.2"
-        ) {
+        compile ":joda-time:1.4"
+
+        runtime(":resources:1.2.1") {
             export = false
         }
+
+        runtime ":jquery:1.10.2"
     }
 }

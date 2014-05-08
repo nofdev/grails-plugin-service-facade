@@ -1,3 +1,6 @@
+import grails.gorm.PagedResultList
+import org.nofdev.servicefacade.grails.PagedResultListCategory
+
 class ServiceFacadeGrailsPlugin {
     // the plugin version
     def version = "2.2.3"
@@ -46,6 +49,7 @@ Brief summary/description of the plugin.
 
     def doWithDynamicMethods = { ctx ->
         // TODO Implement registering dynamic methods to classes (optional)
+        PagedResultList.mixin PagedResultListCategory
     }
 
     def doWithApplicationContext = { ctx ->

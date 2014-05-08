@@ -6,6 +6,7 @@ import org.apache.commons.logging.LogFactory
 import org.codehaus.groovy.grails.web.json.JSONArray
 import org.codehaus.groovy.grails.web.json.JSONElement
 import org.codehaus.groovy.grails.web.json.JSONObject
+import org.joda.time.DateTime
 
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
@@ -40,7 +41,7 @@ class SimpleJSONDeserializer {
             log.trace('element is JSONObject.Null')
             null
         } else if (type.enum) {
-            log.trace("element is an instance of enum")
+            log.trace('element is an instance of enum')
             if (part instanceof String) {
                 if (((String)part).trim() == "")
                     return null
@@ -48,6 +49,15 @@ class SimpleJSONDeserializer {
             }
             else
                 throw new NotSupportedException('Cannot convert to enum except String value!')
+        } else if (type == DateTime) {
+            log.trace('element is jodatime.DateTime')
+            if (part instanceof String) {
+                if (((String)part).trim() == "")
+                    return null
+                DateTime.parse(part)
+            }
+            else
+                throw new NotSupportedException('Cannot convert to jodatime.DateTime except String value!')
         } else {
             log.trace("return $part")
             part
@@ -81,8 +91,8 @@ class SimpleJSONDeserializer {
 
         List params = new ArrayList()
         methodParams.eachWithIndex { param, i ->
-                    params.add(handelJSONPart(param, paramTypes[i]))
-                }
+            params.add(handelJSONPart(param, paramTypes[i]))
+        }
         log.debug("methodParams transformed to: ${params}")
 
         params
