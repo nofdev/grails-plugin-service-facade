@@ -5,7 +5,7 @@ class ServiceFacadeGrailsPlugin {
     // the plugin version
     def version = "3.2.3"
     // the version or versions of Grails the plugin is designed for
-    def grailsVersion = "2.3 > *"
+    def grailsVersion = "2.1 > *"
     // resources that are excluded from plugin packaging
     def pluginExcludes = [
         "grails-app/views/error.gsp"
