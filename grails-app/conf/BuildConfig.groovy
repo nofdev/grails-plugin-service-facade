@@ -40,18 +40,19 @@ grails.project.dependency.resolution = {
     }
 
     plugins {
-        build(":release:3.0.1",
-              ":rest-client-builder:1.0.3",
+        build ":release:3.0.1"
+        build(":rest-client-builder:1.0.3",
               ":tomcat:7.0.42"
         ) {
             export = false
         }
 
-        compile ":joda-time:1.4"
-
         runtime(":resources:1.2.1") {
             export = false
         }
+
+
+        compile ":joda-time:1.4"
 
         runtime ":jquery:1.10.2"
     }
