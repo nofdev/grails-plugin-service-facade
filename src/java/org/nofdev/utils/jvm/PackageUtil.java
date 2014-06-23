@@ -1,14 +1,26 @@
 package org.nofdev.utils.jvm;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
-import java.net.URL;
-import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
+import java.net.*;
+import java.util.*;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 public class PackageUtil {
+    private static final Logger log = LoggerFactory.getLogger(PackageUtil.class);
+
+    private static final String CLASS_EXT = ".class";
+    private static final String SPECIAL_NOT_CLASS_EXT = "$";
+    private static final Character DOT = '.';
+    private static final Character SLASH = '/';
+
     /**
      * Scans all classes accessible from the context class loader which belong to the given package and subpackages.
      *
@@ -18,60 +30,135 @@ public class PackageUtil {
      * @throws java.io.IOException
      */
     @SuppressWarnings("unchecked")
-    public static List<Class> getClasses(String packageName)
+    public static Set<Class<?>> getClasses(String packageName)
             throws ClassNotFoundException, IOException {
+        //获取类加载器
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         assert classLoader != null;
-        String path = packageName.replace('.', '/');
-        Enumeration<URL> resources = classLoader.getResources(path);
-        List<File> dirs = new ArrayList<File>();
+        //是否循环
+        boolean recursive = true;
+        //第一个class类的集合
+        Set<Class<?>> classes = new LinkedHashSet<Class<?>>();
+        //获取包的名字，并进行替换
+        String packagePathName = packageName.replace(DOT, SLASH);
+        Enumeration<URL> resources = classLoader.getResources(packagePathName);
+        //循环迭代resources
         while (resources.hasMoreElements()) {
             URL resource = resources.nextElement();
-            String fileName = resource.getFile();
-            String fileNameDecoded = URLDecoder.decode(fileName, "UTF-8");
-            dirs.add(new File(fileNameDecoded));
-        }
-        ArrayList<Class> classes = new ArrayList<Class>();
-        for (File directory : dirs) {
-            classes.addAll(findClasses(directory, packageName));
+            String protocol = resource.getProtocol();
+
+            if ("file".equals(protocol)) {
+                log.debug("file类型的扫描");
+                //获取包的物理路径
+                String filePath = URLDecoder.decode(resource.getFile(), "UTF-8");
+                log.debug("The file path is: " + filePath);
+                // 以文件的方式扫描整个包下的类并添加到集合中
+                findAndAddClassesInPackageByFile(packageName, filePath, recursive, classes);
+            } else if ("jar".equals(protocol)) {
+                log.debug("jar类型的扫描");
+                log.debug("The jar path is: " + resource.getFile());
+                //获取jar文件
+                JarFile jar = ((JarURLConnection) resource.openConnection()).getJarFile();
+                // 以jar的方式扫描整个包下的类并添加到集合中
+                findAndAddClassesInPackageByJar(jar, packagePathName, recursive, classes);
+            }
         }
         return classes;
     }
 
     /**
-     * Recursive method used to find all classes in a given directory and subdirs.
-     *
-     * @param directory   The base directory
-     * @param packageName The package name for classes found inside the base directory
-     * @return The classes
-     * @throws ClassNotFoundException
+     * 以jar的形式来获取包下的所有Class
      */
-    @SuppressWarnings("unchecked")
-    public static List<Class> findClasses(File directory, String packageName) throws ClassNotFoundException {
-        List<Class> classes = new ArrayList<Class>();
-        if (!directory.exists()) {
-            return classes;
-        }
-        File[] files = directory.listFiles();
-        for (File file : files) {
-            String fileName = file.getName();
-            if (file.isDirectory()) {
-                assert !fileName.contains(".");
-                classes.addAll(findClasses(file, packageName + "." + fileName));
-            } else if (fileName.endsWith(".class") && !fileName.contains("$")) {
-                Class _class;
-                try {
-                    _class = Class.forName(packageName + '.' + fileName.substring(0, fileName.length() - 6));
-                } catch (ExceptionInInitializerError e) {
-                    // happen, for example, in classes, which depend on
-                    // Spring to inject some beans, and which fail,
-                    // if dependency is not fulfilled
-                    _class = Class.forName(packageName + '.' + fileName.substring(0, fileName.length() - 6),
-                            false, Thread.currentThread().getContextClassLoader());
+    public static void findAndAddClassesInPackageByJar(JarFile jar, String packagePathName, Boolean recursive, Set<Class<?>> classes) throws ClassNotFoundException {
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        Enumeration<JarEntry> jarEntries = jar.entries();
+        //循环迭代jarEntries
+        while (jarEntries.hasMoreElements()) {
+            // 获取jar里的一个实体 可以是目录 和一些jar包里的其他文件 如META-INF等文件
+            JarEntry jarEntry = jarEntries.nextElement();
+            String name = jarEntry.getName();
+            log.debug("The files in jar is: " + name);
+            if (name.charAt(0) == SLASH) {
+                name = name.substring(1);
+            } else {
+                //什么都不做
+            }
+            if (name.startsWith(packagePathName)) {//前半部分和定义的包名相同
+                int idx = name.lastIndexOf(SLASH);
+                if (idx != -1 && recursive) {
+                    String jarPackageName = name.substring(0, idx).replace(SLASH, DOT);
+                    if (isClass(name) && !jarEntry.isDirectory()) {
+                        String className = name.substring(jarPackageName.length() + 1, name.length() - CLASS_EXT.length());
+                        classes.add(classLoader.loadClass(jarPackageName + DOT + className));
+                    } else {
+                        //什么都不做
+                    }
+                } else if (idx != -1 && !recursive) {
+                    if (idx == (packagePathName + SLASH).lastIndexOf(SLASH)) {//class就在当前包下
+                        String jarPackageName = name.substring(0, idx).replace(SLASH, DOT);
+                        if (isClass(name) && !jarEntry.isDirectory()) {
+                            String className = name.substring(jarPackageName.length() + 1, name.length() - CLASS_EXT.length());
+                            classes.add(classLoader.loadClass(jarPackageName + DOT + className));
+                        } else {
+                            //什么都不做
+                        }
+                    } else {
+                        //什么都不做
+                    }
+                } else {
+                    //什么都不做
                 }
-                classes.add(_class);
+
+            } else {
+                //什么都不做
             }
         }
-        return classes;
+    }
+
+    /**
+     * 以文件的形式来获取包下的所有Class
+     *
+     * @param packageName
+     * @param packagePath
+     * @param recursive
+     * @param classes
+     */
+    public static void findAndAddClassesInPackageByFile(String packageName, String packagePath, final boolean recursive, Set<Class<?>> classes) throws ClassNotFoundException {
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        // 获取此包的目录 建立一个File
+        File dir = new File(packagePath);
+        // 如果不存在或者 也不是目录就直接返回
+        if (!dir.exists() || !dir.isDirectory()) {
+            return;
+        }
+        // 如果存在 就获取包下的所有文件 包括目录
+        File[] dirfiles = dir.listFiles(new FileFilter() {
+            // 自定义过滤规则 如果可以循环(包含子目录) 或则是以.class结尾的文件(编译好的java类文件)
+            public boolean accept(File file) {
+                return (recursive && file.isDirectory()) || (file.getName().endsWith(CLASS_EXT));
+            }
+        });
+        // 循环所有文件
+        for (File file : dirfiles) {
+            // 如果是目录 则继续扫描
+            if (file.isDirectory()) {
+                findAndAddClassesInPackageByFile(packageName + DOT + file.getName(), file.getAbsolutePath(), recursive, classes);
+            } else if (isClass(file.getName())) {
+                // 如果是java类文件 去掉后面的.class 只留下类名
+                String className = file.getName().substring(0, file.getName().length() - CLASS_EXT.length());
+                //这里用forName有一些不好，会触发static方法，没有使用classLoader的load干净
+                classes.add(classLoader.loadClass(packageName + DOT + className));
+            }
+        }
+    }
+
+    /**
+     * 判断文件是否为一个class
+     *
+     * @param fileName
+     * @return
+     */
+    private static boolean isClass(String fileName) {
+        return fileName.endsWith(CLASS_EXT) && !fileName.contains(SPECIAL_NOT_CLASS_EXT);
     }
 }
