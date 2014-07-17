@@ -34,21 +34,19 @@ class SimpleJSONDeserializer {
 
     def handelJSONPart(Object part, Type type) {
         log.trace("handelJSONPart:<$part> of type:<$type>")
-        if (part instanceof JSONElement) {
-            log.trace("instance of JSONElement")
-            handelJSONElement(part as JSONElement, type)
-        } else if (part instanceof JSONObject.Null) {
-            log.trace('element is JSONObject.Null')
-            null
-        } else if (type.enum) {
+        if (type.enum) {
             log.trace('element is an instance of enum')
             if (part instanceof String) {
+                log.trace('enum is String representation')
                 if (((String)part).trim() == "")
                     return null
                 type.valueOf(part)
-            }
-            else
+            } else if(part instanceof JSONObject) {
+                log.trace('enum is Object representation, process it with name property')
+                type.valueOf(part.name)
+            } else {
                 throw new NotSupportedException('Cannot convert to enum except String value!')
+            }
         } else if (type == DateTime) {
             log.trace('element is jodatime.DateTime')
             if (part instanceof String) {
@@ -58,6 +56,12 @@ class SimpleJSONDeserializer {
             }
             else
                 throw new NotSupportedException('Cannot convert to jodatime.DateTime except String value!')
+        } else if (part instanceof JSONElement) {
+            log.trace("instance of JSONElement")
+            handelJSONElement(part as JSONElement, type)
+        } else if (part instanceof JSONObject.Null) {
+            log.trace('element is JSONObject.Null')
+            null
         } else {
             log.trace("return $part")
             part
