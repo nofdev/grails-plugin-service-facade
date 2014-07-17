@@ -25,6 +25,9 @@ grails.project.dependency.resolution = {
     }
     log "warn" // log level of Ivy resolver, either 'error', 'warn', 'info', 'debug' or 'verbose'
     repositories {
+        mavenRepo "http://nexus.sp.cn/nexus/content/groups/public/"
+        grailsRepo "http://nexus.sp.cn/nexus/content/repositories/plugins.grails.org/"
+
         grailsCentral()
         mavenLocal()
         mavenCentral()
@@ -37,6 +40,7 @@ grails.project.dependency.resolution = {
     dependencies {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
         // runtime 'mysql:mysql-connector-java:5.1.24'
+        test 'org.jetbrains.groovy.grails.rt:intellij-grails-rt:13.1'//解决intellij在fork环境下无法运行测试的问题
     }
 
     plugins {
@@ -56,4 +60,10 @@ grails.project.dependency.resolution = {
 
         runtime ":jquery:1.10.2"
     }
+
+    grails.project.repos.default = "myRepo"
+    grails.project.repos.myRepo.url = "http://nexus.sp.cn/nexus/content/repositories/grails-plugin/"
+    grails.project.repos.myRepo.type = "maven"
+    grails.project.repos.myRepo.username = "admin"
+    grails.project.repos.myRepo.password = "admin123"
 }
