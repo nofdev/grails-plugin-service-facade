@@ -34,7 +34,7 @@ class SimpleJSONDeserializer {
 
     def handelJSONPart(Object part, Type type) {
         log.trace("handelJSONPart:<$part> of type:<$type>")
-        if (type.enum) {
+        if (!(type instanceof ParameterizedType) && type.enum) {
             log.trace('element is an instance of enum')
             if (part instanceof String) {
                 log.trace('enum is String representation')
