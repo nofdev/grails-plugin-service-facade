@@ -25,8 +25,7 @@ class SimpleJSONDeserializer {
         if (element instanceof JSONArray) {
             log.trace("element is JSONArray")
             handelJSONArray(element as JSONArray, type)
-        }
-        else if (element instanceof JSONObject) {
+        } else if (element instanceof JSONObject) {
             log.trace("element is JSONObject")
             handelJSONObject(element as JSONObject, type as Class)
         }
@@ -38,10 +37,10 @@ class SimpleJSONDeserializer {
             log.trace('element is an instance of enum')
             if (part instanceof String) {
                 log.trace('enum is String representation')
-                if (((String)part).trim() == "")
+                if (((String) part).trim() == "")
                     return null
                 type.valueOf(part)
-            } else if(part instanceof JSONObject) {
+            } else if (part instanceof JSONObject) {
                 log.trace('enum is Object representation, process it with name property')
                 type.valueOf(part.name)
             } else {
@@ -50,12 +49,28 @@ class SimpleJSONDeserializer {
         } else if (type == DateTime) {
             log.trace('element is jodatime.DateTime')
             if (part instanceof String) {
-                if (((String)part).trim() == "")
+                if (((String) part).trim() == "")
                     return null
                 DateTime.parse(part)
-            }
-            else
+            } else
                 throw new NotSupportedException('Cannot convert to jodatime.DateTime except String value!')
+        } else if (type == Boolean) {
+            if (part == '') {
+                log.trace("consider empty string as null for Boolean")
+                null
+            } else if (part instanceof String) {
+                log.trace("parse string for Boolean")
+                Boolean.parseBoolean(part)
+            } else if (part instanceof JSONElement) {
+                log.trace("instance of JSONElement")
+                handelJSONElement(part as JSONElement, type)
+            } else if (part instanceof JSONObject.Null) {
+                log.trace('element is JSONObject.Null')
+                null
+            } else {
+                log.trace("return $part")
+                part
+            }
         } else if (part instanceof JSONElement) {
             log.trace("instance of JSONElement")
             handelJSONElement(part as JSONElement, type)
